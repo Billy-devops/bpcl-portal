@@ -5,7 +5,7 @@ services:
   frontend:
     build: ./frontend
     ports:
-      - "80:80"
+      - "8081:80"
     depends_on:
       - gateway
     restart: always
@@ -23,16 +23,29 @@ services:
   dealer-service:
     build: ./services/dealer-service
     restart: always
+    depends_on:
+      - db
 
   complaint-service:
     build: ./services/complaint-service
     restart: always
+    depends_on:
+      - db
 
   auth-service:
     build: ./services/auth-service
     restart: always
 
-networks:
-  default:
-    driver: bridge
-    
+  db:
+    image: mysql:8
+    container_name: bpcl-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: bpcl
+    volumes:
+      - db_data:/var/lib/mysql
+
+volumes:
+  db_data:
+  

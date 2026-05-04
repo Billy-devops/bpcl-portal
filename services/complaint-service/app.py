@@ -1,23 +1,57 @@
 from flask import Flask, request, jsonify
+import mysql.connector
+import time
 
 app = Flask(__name__)
 
-complaints = []
+# wait for DB (important)
+time.sleep(10)
 
-@app.route("/api/complaints", methods=["POST"])
+conn = mysql.connector.connect(
+    host="db",
+    user="root",
+    password="root",
+    database="bpcl"
+)
+
+cursor = conn.cursor()
+
+# create table
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS complaints (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    dealer VARCHAR(255),
+    message TEXT
+)
+""")
+
+@app.route("/complaints", methods=["POST"])
 def create_complaint():
     data = request.json
-    complaints.append(data)
-    return {"message": "Complaint registered"}
+    dealer = data.get("dealer")
+    message = data.get("message")
 
-@app.route("/api/complaints", methods=["GET"])
+    cursor.execute(
+        "INSERT INTO complaints (dealer, message) VALUES (%s, %s)",
+        (dealer, message)
+    )
+    conn.commit()
+
+    return jsonify({"message": "Complaint saved in DB"})
+
+@app.route("/complaints", methods=["GET"])
 def get_complaints():
-    return jsonify(complaints)
+    cursor.execute("SELECT * FROM complaints")
+    rows = cursor.fetchall()
 
-@app.route("/health")
-def health():
-    return {"status": "ok"}
+    result = []
+    for r in rows:
+        result.append({
+            "id": r[0],
+            "dealer": r[1],
+            "message": r[2]
+        })
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5001)
-    
+    return jsonify(result)
+
+app.run(host="0.0.0.0", port=5000)
