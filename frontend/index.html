@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>BPCL Depot Safety Portal</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<header class="navbar">
+  <div class="logo">🔥 BPCL DEPOT SAFETY</div>
+  <button class="login-btn">Login with Google</button>
+</header>
+
+<section class="hero">
+  <div class="hero-left">
+    <h1>Safety is non-negotiable.</h1>
+    <p>
+      Real-time BPCL depot safety monitoring, dealer management, 
+      complaint system and operational excellence.
+    </p>
+
+    <button onclick="loadDealers()">Explore Platform</button>
+
+    <div class="stats">
+      <div>250+ Dealers</div>
+      <div>24/7 Monitoring</div>
+      <div>Safe Operations</div>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <img src="https://images.unsplash.com/photo-1581093458791-9d09c68c2b6f" />
+  </div>
+</section>
+
+<section class="features">
+  <div class="card">Dealer Monitoring</div>
+  <div class="card">Safety Checklist</div>
+  <div class="card">Complaint System</div>
+  <div class="card">Training & Audit</div>
+</section>
+
+<section class="dashboard">
+  <h2>Dealer List</h2>
+  <input type="text" id="search" placeholder="Search Dealer..." onkeyup="searchDealer()" />
+  <div id="dealer-list"></div>
+</section>
+
+<section class="complaint">
+  <h2>Raise Complaint</h2>
+
+  <input id="dealer" placeholder="Dealer Name" />
+  <textarea id="issue" placeholder="Describe issue"></textarea>
+  <button onclick="submitComplaint()">Submit</button>
+</section>
+
+<script src="app.js"></script>
+
+</body>
+</html>

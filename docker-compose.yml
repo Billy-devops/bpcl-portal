@@ -1,0 +1,38 @@
+version: "3.9"
+
+services:
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - gateway
+    restart: always
+
+  gateway:
+    build: ./gateway
+    ports:
+      - "8080:80"
+    depends_on:
+      - dealer-service
+      - complaint-service
+      - auth-service
+    restart: always
+
+  dealer-service:
+    build: ./services/dealer-service
+    restart: always
+
+  complaint-service:
+    build: ./services/complaint-service
+    restart: always
+
+  auth-service:
+    build: ./services/auth-service
+    restart: always
+
+networks:
+  default:
+    driver: bridge
+    
