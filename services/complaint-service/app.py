@@ -4,54 +4,94 @@ import time
 
 app = Flask(__name__)
 
-# wait for DB (important)
-time.sleep(10)
+# DB CONNECTION (RETRY LOGIC)
+def get_db_connection():
+    retries = 15
+    while retries > 0:
+        try:
+            conn = mysql.connector.connect(
+                host="bpcl-mysql",
+                user="root",
+                password="root",
+                database="bpcl"
+            )
+            print("DB connected ✔")
+            return conn
+        except Exception as e:
+            print("DB not ready:", e)
+            time.sleep(3)
+            retries -= 1
 
-conn = mysql.connector.connect(
-    host="db",
-    user="root",
-    password="root",
-    database="bpcl"
-)
+    raise Exception("Database connection failed")
 
-cursor = conn.cursor()
 
-# create table
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS complaints (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    dealer VARCHAR(255),
-    message TEXT
-)
-""")
+# AUTO TABLE CREATE
+def init_db():
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
-@app.route("/complaints", methods=["POST"])
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS complaints (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(100),
+            email VARCHAR(100),
+            message TEXT
+        )
+    """)
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+init_db()
+
+
+# CREATE COMPLAINT
+@app.route('/complaints', methods=['POST'])
 def create_complaint():
-    data = request.json
-    dealer = data.get("dealer")
-    message = data.get("message")
+    data = request.get_json()
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
     cursor.execute(
-        "INSERT INTO complaints (dealer, message) VALUES (%s, %s)",
-        (dealer, message)
+        "INSERT INTO complaints (name, email, message) VALUES (%s, %s, %s)",
+        (data["name"], data["email"], data["message"])
     )
+
     conn.commit()
+    cursor.close()
+    conn.close()
 
-    return jsonify({"message": "Complaint saved in DB"})
+    return jsonify({"message": "Saved ✔"})
 
-@app.route("/complaints", methods=["GET"])
+
+# GET COMPLAINTS
+@app.route('/complaints', methods=['GET'])
 def get_complaints():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
     cursor.execute("SELECT * FROM complaints")
     rows = cursor.fetchall()
 
-    result = []
-    for r in rows:
-        result.append({
-            "id": r[0],
-            "dealer": r[1],
-            "message": r[2]
-        })
+    cursor.close()
+    conn.close()
 
-    return jsonify(result)
+    return jsonify(rows)
 
-app.run(host="0.0.0.0", port=5000)
+
+# HEALTH CHECK (IMPORTANT)
+@app.route('/health', methods=['GET'])
+def health():
+    try:
+        conn = get_db_connection()
+        conn.close()
+        return jsonify({"status": "UP ✔ DB Connected"})
+    except:
+        return jsonify({"status": "DOWN ❌ DB Issue"}), 500
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
+    

@@ -31,6 +31,7 @@ services:
     restart: always
     depends_on:
       - db
+    
 
   auth-service:
     build: ./services/auth-service
@@ -45,6 +46,11 @@ services:
       MYSQL_DATABASE: bpcl
     volumes:
       - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
 volumes:
-  db_data:
+  db_data:  
